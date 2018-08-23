@@ -11,8 +11,12 @@ class Echelle(object):
         hdu = fits.open(filename)
         self.data = hdu[0].data
         # normalization
-        self.data = 1.0*self.data - np.mean(self.data)
+        self.data = 1.0*self.data - np.min(self.data)
         self.data /= np.max(self.data)
+
+    def saveimage(self, filename):
+        hdu = fits.PrimaryHDU(self.data)
+        hdu.writeto(filename, overwrite=True)
 
     def artificial_flat(self):
         numrows, numcols = self.data.shape
@@ -21,10 +25,11 @@ class Echelle(object):
         X, Y = np.meshgrid(x, y, copy=False)
 
         Z = np.copy(self.data)
-        Z -= np.min(Z)
-        Z /= np.max(Z)
+        # Z -= np.min(Z)
+        # Z /= np.max(Z)
+        # Z += 1
 
-        i = np.where(self.data > 0.0)
+        i = np.where(self.data > np.mean(self.data))
         X = X[i]
         Y = Y[i]
         Z = Z[i]
@@ -47,9 +52,9 @@ class Echelle(object):
         # plt.close()
         hdu = fits.PrimaryHDU(flat)
         hdu.writeto('/Users/jwe/Projects/Astronomie/Spectra/artificial_flat.fit', overwrite=True)
-        self.data -= np.min(self.data)
-        self.data /= np.max(self.data)
-        
+        # self.data -= np.min(self.data)
+        # self.data /= np.max(self.data)
+
         self.data /= flat
         #
         # self.data /= np.nanmax(self.data)
@@ -104,4 +109,5 @@ class Echelle(object):
 e = Echelle()
 e.loadimage('/Users/jwe/Projects/Astronomie/Spectra/spectrum7.fit')
 e.artificial_flat()
+e.saveimage('/Users/jwe/Projects/Astronomie/Spectra/spectrum7_flat.fit')
 # e.extract_orders()
